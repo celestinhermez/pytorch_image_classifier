@@ -1,1 +1,2 @@
 flowers.tar.gz filter=lfs diff=lfs merge=lfs -text
+flowers filter=lfs diff=lfs merge=lfs -text
