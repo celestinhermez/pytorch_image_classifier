@@ -33,23 +33,33 @@ def get_input_args_train():
     parser.add_argument('dir', type=str, default='flowers', 
                         help='data_directory where to find the images on which to train')
     
-    # The second optional argument points to a directory where to save our checkpoint. By default, it is our current working directory
-    parser.add_argument('--save_dir', action='store', default = cwd, help='Store the directory where to save the checkpoint')
+    # The second optional argument points to a directory where to save our checkpoint.
+    # By default, it is our current working directory
+    parser.add_argument('--save_dir', action='store', default=cwd,
+                        help='Store the directory where to save the checkpoint')
 
     # The third optional argument enables choosing a model architecture. We offer the choice betwen VGG16 and ResNet152
-    parser.add_argument('--arch', action='store', default = 'vgg16', help='Choose the architecture of the model, between ResNet152 (default) and VGG16')
+    parser.add_argument('--arch', action='store', default='vgg16',
+                        help='Choose the architecture of the model, between ResNet152 (default) and VGG16')
 
     # The fourth optional argument enables choosing a learning rate, 0.001 by default
-    parser.add_argument('--learning_rate', action='store', default = 0.001, type = float, help='Choose the learning rate of the model, 0.001 by default')
+    parser.add_argument('--learning_rate', action='store',
+                        default=0.001, type=float, help='Choose the learning rate of the model, 0.001 by default')
     
-    # The fifth optional argument allows choosing the number of hidden units, 1000 by default. We limit ourselves to one hidden layer in this particular case
-    parser.add_argument('--hidden_units', action='store', default = 1000, type = int, help='Choose the number of hidden units, 1,000 by default')
+    # The fifth optional argument allows choosing the number of hidden units, 1000 by default.
+    # We limit ourselves to one hidden layer in this particular case
+    parser.add_argument('--hidden_units', action='store', default=1000,
+                        type=int, help='Choose the number of hidden units, 1,000 by default')
     
     # The sixth optional argument allows choosing for how many epochs we want to train our model, 5 by default
-    parser.add_argument('--epochs', action='store', default = 5, type = int, help='Choose the number of epochs, 5 by default')
+    parser.add_argument('--epochs', action='store', default=5,
+                        type=int, help='Choose the number of epochs, 5 by default')
     
-    # The last positional argument allows setting a True or False value to the GPU variable, in order to choose whether the model will be trained on a GPU or not
-    parser.add_argument('--gpu', action='store_true', default=False, dest='gpu', help='By default, the model will not be trained on a GPU ; if this argument is present it will')
+    # The last positional argument allows setting a True or False value to the GPU variable,
+    # in order to choose whether the model will be trained on a GPU or not
+    parser.add_argument('--gpu', action='store_true',
+                        default=False, dest='gpu',
+                        help='By default, the model will not be trained on a GPU ; if this argument is present it will')
     
     return parser.parse_args()
 
@@ -76,13 +86,17 @@ def get_input_args_predict():
     
     # The third optional argument enables choosing how many classes we want to return
     
-    parser.add_argument('--top_k', action='store', default = 5, type = int, help='Choose how many predicted classes we want to return')
+    parser.add_argument('--top_k', action='store', default=5, type=int,
+                        help='Choose how many predicted classes we want to return')
     
     # The fourth optional argument enables providing a mapping from the category indices to their names
-    parser.add_argument('--category_names', action='store', default = '', help='The mapping from index to category names')
+    parser.add_argument('--category_names', action='store',
+                        default='', help='The mapping from index to category names')
     
-    # The fifth positional argument allows setting a True or False value to the GPU variable, in order to choose whether the model will be trained on a GPU or not
-    parser.add_argument('--gpu', action='store_true', default=False, dest='gpu', help='By default, the model will not be trained on a GPU ; if this argument is present it will')
+    # The fifth positional argument allows setting a True or False value to the GPU variable,
+    # in order to choose whether the model will be trained on a GPU or not
+    parser.add_argument('--gpu', action='store_true', default=False, dest='gpu',
+                        help='By default, the model will not be trained on a GPU ; if this argument is present it will')
     
     return parser.parse_args()
 
