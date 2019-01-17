@@ -8,7 +8,6 @@ from torch import nn
 from torch import optim
 from torch.optim import lr_scheduler
 import os
-import torch.nn.functional as F
 from torchvision import datasets, transforms, models
 from collections import OrderedDict
 from PIL import Image
@@ -87,9 +86,15 @@ def get_input_args_predict():
     
     return parser.parse_args()
 
-def build_model(architecture , hidden_units, nb_categories):
-    """ This function takes a model architecture, a number of hidden units and the number of categories as its inputs,
-    and it returns the pre-trained model with a modified classifier
+def build_model(architecture, hidden_units, nb_categories):
+    """
+    INPUTS:
+    architecture (str): the architecture, between VGG16 and Resnet152
+    hidden_units (int): the number of units in the hidden layers
+    nb_categories (int): the number of output categories to predict
+
+    OUTPUT:
+    model: a PyTorch model with the desired architecture
     """
     
     # We start by loading the chosen model architecture, VGG16 or DenseNet121
@@ -196,108 +201,106 @@ def validation(model, validateloader, criterion, gpu):
     
     return validation_loss, accuracy
 
-def train_model(model, criterion, optimizer, scheduler, num_epochs, dataloaders, gpu):
-  '''
-  INPUT:
-  model: a model instance we want to train
-  criterion: the loss function
-  optimizer: which optimizer we want to use
-  scheduler: the scheduler to adapt our learning rate
-  num_epochs: the number of epochs
-  dataloaders: dataloaders with all our data
-  device: whether we want to train on a CPU or GPU
 
-  OUTPUT:
-  a trained model instance
-  '''
+def train_model(model, criterion, optimizer, scheduler, dataloaders,
+                num_epochs, gpu):
+    """
+    INPUT:
+    model: a model instance we want to train
+    criterion: the loss function
+    optimizer: which optimizer we want to use
+    scheduler: the scheduler to adapt our learning rate
+    num_epochs: the number of epochs
+    device: whether we want to train on a CPU or GPU
 
-      # We train our network, including a validation pass inside
-      # We print every 20 steps to have visibility somewhat regularly in our model
+    OUTPUT:
+    model: a trained model instance
+    """
 
+    # We train our network, including a validation pass inside
+    # We print every 20 steps to have visibility somewhat regularly in our model
 
-      # We send our model to cuda if available
-      if gpu:
-          model.to('cuda')
+    # We send our model to cuda if available
+    if gpu:
+        model.to('cuda')
 
-      # We initialize various values
-      epochs = num_epochs
-      steps = 0
-      running_loss = 0
-      print_every = 20
-      valid_loss_min = np.Inf
-      best_acc = 0.0
+    # We initialize various values
+    epochs = num_epochs
+    steps = 0
+    running_loss = 0
+    print_every = 20
+    valid_loss_min = np.Inf
+    best_acc = 0.0
 
-      for e in range(epochs):
-          # We make sure we are in training mode to make sure dropout is activated
-          # We send the inputs and the labels to cuda as well if available
-          # We take a scheduler step to change our learning rate as we train
-          if scheduler != None:
+    for e in range(epochs):
+        # We make sure we are in training mode to make sure dropout is activated
+        # We send the inputs and the labels to cuda as well if available
+        # We take a scheduler step to change our learning rate as we train
+        if scheduler != None:
             scheduler.step()
+        model.train()
+        for images, labels in dataloaders['train']:
+            if gpu:
+                images, labels = images.to('cuda'), labels.to('cuda')
+            steps += 1
 
-          model.train()
-          for images, labels in dataloaders['train']:
-              if gpu:
-                  images, labels = images.to('cuda'), labels.to('cuda')
-              steps += 1
+            optimizer.zero_grad()
 
-              optimizer.zero_grad()
+            output = model.forward(images)
+            loss = criterion(output, labels)
+            loss.backward()
+            optimizer.step()
 
-              output = model.forward(images)
-              loss = criterion(output, labels)
-              loss.backward()
-              optimizer.step()
+            running_loss += loss.item()
 
-              running_loss += loss.item()
+            if steps % print_every == 0:
+                # We put the network in evaluation mode, to turn off dropout,
+                # otherwise we will have particularly low accuracy
+                model.eval()
 
+                # Turn off gradients for validation
+                with torch.no_grad():
+                    validation_loss, accuracy = validation(model, dataloaders['valid'], criterion, gpu)
 
-              if steps % print_every == 0:
-                  # We put the network in evaluation mode, to turn off dropout,
-                  # otherwise we will have particularly low accuracy
-                  model.eval()
+                print("Epoch: {}/{}.. ".format(e + 1, epochs),
+                      "Training Loss: {:.3f}.. ".format(running_loss / print_every),
+                      "Validation Loss: {:.3f}.. ".format(validation_loss / len(dataloaders['valid'])),
+                      "Validation Accuracy: {:.3f}".format(accuracy / len(dataloaders['valid'])))
 
-                  # Turn off gradients for validation
-                  with torch.no_grad():
-                      validation_loss, accuracy = validation(model, dataloaders['valid'], criterion)
+                running_loss = 0
 
-                  print("Epoch: {}/{}.. ".format(e+1, epochs),
-                        "Training Loss: {:.3f}.. ".format(running_loss/print_every),
-                        "Validation Loss: {:.3f}.. ".format(validation_loss/len(dataloaders['valid'])),
-                        "Validation Accuracy: {:.3f}".format(accuracy/len(dataloaders['valid'])))
-
-                  running_loss = 0
-
-                  if validation_loss/len(dataloaders['valid']) <= valid_loss_min:
+                if validation_loss / len(dataloaders['valid']) <= valid_loss_min:
                     print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(
-                    valid_loss_min,
-                    validation_loss/len(dataloaders['valid'])))
+                        valid_loss_min,
+                        validation_loss / len(dataloaders['valid'])))
                     torch.save(model.state_dict(), 'model_flowers.pt')
-                    valid_loss_min = validation_loss/len(dataloaders['valid'])
-                    best_acc = accuracy/len(dataloaders['valid'])
+                    valid_loss_min = validation_loss / len(dataloaders['valid'])
+                    best_acc = accuracy / len(dataloaders['valid'])
 
-                  # Make sure training is back on
-                  model.train()
-      print('Best accuracy: {:4f}'.format(best_acc))
+                # Make sure training is back on
+                model.train()
+    print('Best accuracy: {:4f}'.format(best_acc))
 
-      # load best model weights
-      model.load_state_dict(torch.load('model_flowers.pt'))
-      return model
+    # load best model weights
+    model.load_state_dict(torch.load('model_flowers.pt'))
+    return model
 
 def save_checkpoint(model, optimizer, learning_rate, epochs, save_dir, arch):
     """ This function allows us to save a checkpoint for later use """
-    
-    checkpoint = {'input_size': model.classifier.fc1.in_features,
-              'output_size': model.classifier.fc2.out_features,
-              'arch': arch,
-              'activation_function': nn.ReLU(),
-              'hidden_layer': model.classifier.fc1.out_features,
-              'epochs': epochs,
-              'dropout': nn.Dropout(0.2),
-              'output': nn.LogSoftmax(dim = 1),
-              'learning_rate': learning_rate,
-              'optimizer_state': optimizer.state_dict,
-              'state_dict': model.state_dict()}
 
-    torch.save(checkpoint, save_dir + '/checkpoint.pth')
+    checkpoint = {'input_size': model.fc.fc1.in_features,
+                  'output_size': model.fc.fc2.out_features,
+                  'activation_function': nn.ReLU(),
+                  'hidden_layer': model.fc.fc1.out_features,
+                  'epochs': epochs,
+                  'dropout': nn.Dropout(0.3),
+                  'output': nn.LogSoftmax(dim=1),
+                  'learning_rate': learning_rate,
+                  'optimizer_state': optimizer.state_dict,
+                  'state_dict': model.state_dict(),
+                  'arch': arch}
+
+    torch.save(checkpoint, save_dir)
 
 def load_checkpoint(checkpoint):
     """ This function allows us to load a previously saved checkpoint 
@@ -309,7 +312,7 @@ def load_checkpoint(checkpoint):
     if checkpoint['arch'] == 'vgg16':
         model = models.vgg16(pretrained=True)
     
-    if checkpoint['arch'] == 'densenet121':
+    if checkpoint['arch'] == 'resnet152':
         model = models.densenet121(pretrained=True)
         
     for param in model.parameters():
@@ -317,6 +320,7 @@ def load_checkpoint(checkpoint):
     
     # We start by loading the architecture of the classifier again
     classifier = nn.Sequential(OrderedDict([
+                            ('dropout', checkpoint['dropout']),
                             ('fc1', nn.Linear(checkpoint['input_size'], checkpoint['hidden_layer'])),
                             ('relu1', checkpoint['activation_function']),
                             ('dropout', checkpoint['dropout']),
@@ -325,7 +329,11 @@ def load_checkpoint(checkpoint):
                           ]))
     
     # We then load some additional elements
-    model.classifier = classifier
+    if checkpoint['arch'] == 'vgg16':
+        model.classifier = classifier
+    else:
+        model.fc = classifier
+
     model.load_state_dict(checkpoint['state_dict'])
     model.epochs = checkpoint['epochs']
     model.lr = checkpoint['learning_rate']
@@ -334,17 +342,17 @@ def load_checkpoint(checkpoint):
     return model
 
 def get_image(file_path):
-    ''' Takes a string file path for an image as its input,
-        returns a PIL image as its output
-    '''
+    """
+    Takes a string file path for an image as its input, returns a PIL image as its output
+    """
     image = Image.open(file_path)
     
     return image
 
 def process_image(image):
-    ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
-        returns an Numpy array
-    '''
+    """
+    Scales, crops, and normalizes a PIL image for a PyTorch model, returns an Numpy array
+    """
     # We resize the images to make sure there are all 224 x 224 pixels
     # We first create a thumbnail if the shortest size is 256 pixels
     if min(image.size) <= 256:

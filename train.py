@@ -15,7 +15,7 @@ import helper
 def main():
         
     # We display a short prompt
-    print('Hello! This script will train a neural network with a Resnet architecture with only one layer.' +
+    print('Hello! This script will train a neural network with a Resnet or VGG architecture with only one layer.' +
           '\n' + 'You can consult the help for other command line arguments.')
 
     nb_categories = int(input('Please input the number of categories of your target variable: '))
@@ -49,12 +49,10 @@ def main():
     scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
     # Train our model
-    model = helper.train_model(model, criterion, optimizer, scheduler, epochs, dataloaders, gpu)
-                                        
+    model = helper.train_model(model, criterion, optimizer, scheduler, dataloaders, epochs, gpu)
 
     # Save the checkpoint
-
     helper.save_checkpoint(model, criterion, optimizer, learning_rate, epochs, save_dir, arch)
     
 main()
-    
+

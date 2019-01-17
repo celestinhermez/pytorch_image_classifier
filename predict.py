@@ -32,10 +32,8 @@ def main():
     top_k = args.top_k
     mapping = args.category_names
     gpu = args.gpu
-    
-    
+
     # We predict the categories, with their associated probabilities
-    
     helper.predict(image, checkpoint, top_k, mapping, gpu)
     
 main()
