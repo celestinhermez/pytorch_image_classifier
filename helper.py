@@ -318,42 +318,37 @@ def save_checkpoint(model, optimizer, learning_rate, epochs, save_dir, arch):
 
 def load_checkpoint(checkpoint):
     """ This function allows us to load a previously saved checkpoint 
-    It takes a model architecture and the filepath to 
+    It takes a checkpoint filepath and returns a trained model we can use for predictions
     """
-  # We start by loading our checkpoint, which contains information on the classifier which we need to build again
-    checkpoint = torch.load(checkpoint)   
-    
-    if checkpoint['arch'] == 'vgg16':
-        model = models.vgg16(pretrained=True)
-    
-    if checkpoint['arch'] == 'resnet152':
-        model = models.densenet121(pretrained=True)
-        
-    for param in model.parameters():
-        param.requires_grad = False
-    
+    # We load our checkpoint, which contains information on the classifier which we need to build again
+    checkpoint = torch.load(checkpoint, map_location='cpu')
+
     # We start by loading the architecture of the classifier again
     classifier = nn.Sequential(OrderedDict([
-                            ('dropout', checkpoint['dropout']),
-                            ('fc1', nn.Linear(checkpoint['input_size'], checkpoint['hidden_layer'])),
-                            ('relu1', checkpoint['activation_function']),
-                            ('dropout', checkpoint['dropout']),
-                            ('fc2', nn.Linear(checkpoint['hidden_layer'], checkpoint['output_size'])),
-                            ('output', checkpoint['output'])
-                          ]))
-    
-    # We then load some additional elements
-    if checkpoint['arch'] == 'vgg16':
-        model.classifier = classifier
-    else:
-        model.fc = classifier
+        ('dropout', checkpoint['dropout']),
+        ('fc1', nn.Linear(checkpoint['input_size'], checkpoint['hidden_layer'])),
+        ('relu1', checkpoint['activation_function']),
+        ('dropout1', checkpoint['dropout']),
+        ('fc2', nn.Linear(checkpoint['hidden_layer'], checkpoint['output_size'])),
+        ('output', checkpoint['output'])
+    ]))
 
-    model.load_state_dict(checkpoint['state_dict'])
-    model.epochs = checkpoint['epochs']
-    model.lr = checkpoint['learning_rate']
-    
-    
+    # We then load the pre-trained model and attach our state dictionary to it
+    if checkpoint['arch'] == 'resnet152':
+        model = models.resnet152(pretrained=True)
+        model.fc = classifier
+    elif checkpoint['arch'] == 'vgg16':
+        model = models.vgg16(pretrained=True)
+        model.classifier = classifier
+
+    for param in model.parameters():
+        param.requires_grad = False
+
+    model.load_state_dict(checkpoint['state_dict'], strict=False)
+    model.eval()
+
     return model
+
 
 def get_image(file_path):
     """
