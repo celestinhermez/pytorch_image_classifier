@@ -352,7 +352,11 @@ def load_checkpoint(checkpoint):
 
 def get_image(file_path):
     """
-    Takes a string file path for an image as its input, returns a PIL image as its output
+    INPUT:
+    file_ath (str): the filepath to an image
+
+    OUTPUT:
+    image: a PIL image
     """
     image = Image.open(file_path)
     
@@ -360,7 +364,13 @@ def get_image(file_path):
 
 def process_image(image):
     """
-    Scales, crops, and normalizes a PIL image for a PyTorch model, returns an Numpy array
+    INPUT:
+    image: a PIL image
+
+    OUTPUT:
+    image: a NumPy array which has been scaled, cropped and normalized
+
+    DESCRIPTION: Scales, crops, and normalizes a PIL image for a PyTorch model, returns an Numpy array
     """
     # We resize the images to make sure there are all 224 x 224 pixels
     # We first create a thumbnail if the shortest size is 256 pixels
@@ -394,7 +404,15 @@ def process_image(image):
     return image
 
 def imshow(image, ax=None, title=None):
-    """Imshow for Tensor."""
+    """
+    INPUT:
+    image: an image
+    ax: the axes
+    title: the title
+
+    OUTPUT:
+    ax
+    """
     if ax is None:
         fig, ax = plt.subplots()
     
@@ -415,9 +433,21 @@ def imshow(image, ax=None, title=None):
     return ax
 
 def predict(image_path, checkpoint, topk, mapping, gpu):
-    ''' Predict the class (or classes) of an image using a trained deep learning model.
-        The model input should be a checkpoint we want to use
-    '''
+    """
+    INPUTS:
+    image_path (str): the path to an image
+    checkpoint: a PyTorch checkpoint which we can load to create a model
+    topk: the number of classes to predict
+    mapping: a file containing the mapping from class numbers to names
+    gpu (bool): a Boolean specifying whether a GPU is available
+
+    OUTPUT:
+    topk_classes: the top k most likely classes, in decreasing order
+    topk_probs: the associated probabilities
+
+    DESCRIPTION: Predict the class (or classes) of an image using a trained deep learning model.
+    The model input should be a checkpoint we want to use
+    """
     model = load_checkpoint(checkpoint)
     
     if gpu:
@@ -469,5 +499,3 @@ def predict(image_path, checkpoint, topk, mapping, gpu):
         
         print('The top k probabilities are: ' + str(topk_probs) + '\n')
         print('The top k classes are: ' + str(topk_classes) + '\n')
-        
-    
