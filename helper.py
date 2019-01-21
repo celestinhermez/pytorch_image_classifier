@@ -16,11 +16,11 @@ from PIL import Image
 
 def get_input_args_train():
     """
-    This function parses the command line for arguments and returns them as an ArgumentParser object
-    Parameters:
-     None - simply using argparse module to create & store command line arguments
-    Returns:
-     parse_args() -data structure that stores the command line arguments object  
+    INPUTS:
+    None
+
+    OUTPUT:
+    parse_args(): a data structure that stores the command line arguments object for the train script
     """
     cwd = os.getcwd()
     
@@ -65,11 +65,11 @@ def get_input_args_train():
 
 def get_input_args_predict():
     """
-    This function parses the command line for arguments and returns them as an ArgumentParser object
-    Parameters:
-     None - simply using argparse module to create & store command line arguments
-    Returns:
-     parse_args() -data structure that stores the command line arguments object  
+    INPUTS:
+    None
+
+    OUTPUT:
+    parse_args(): a data structure that stores the command line arguments object for the predict script
     """
     # Creates the parser 
     parser = argparse.ArgumentParser()
@@ -155,8 +155,15 @@ def build_model(architecture, hidden_units, nb_categories):
     return model
 
 def load_images(data_dir, train_dir_ext = '/train', valid_dir_ext = '/valid'):
-    """ Takes a data directory, and an extension for the train, validation and test directories
-    Returns a dictionary of dataloaders for future use """
+    """
+    INPUTS:
+    data_dir (str): a general string for the diretcory containing the images
+    train_dir_ext (str): the extension which describes the directory with the training images
+    valid_dir_ext (str): the extension which describes the directory with the validation images
+
+    OUTPUT:
+    dataloaders (dict): a dictionary of dataloaders, one for the training and one for the validation images
+    """
     
     # Start by setting up the transforms for our data
     data_transforms = {
@@ -194,7 +201,18 @@ def load_images(data_dir, train_dir_ext = '/train', valid_dir_ext = '/valid'):
     return dataloaders
 
 def validation(model, validateloader, criterion, gpu):
-    """ This function is used to run a validation pass on our model"""
+    """
+     INPUTS:
+     model: a PyTorch model
+     validateloader (dataloader): a dataloader for the validation images
+     criterion: a loss function
+     gpu (bool): whether a GPU is available
+
+     OUTPUT:
+     validation_loss: the validation loss on the validation set
+     validation_accuracy: accuracy on the validation set
+     """
+
     # We run our validation on the GPU as well
     if gpu:
         model.to('cuda')
@@ -300,7 +318,18 @@ def train_model(model, criterion, optimizer, scheduler, dataloaders,
     return model
 
 def save_checkpoint(model, optimizer, learning_rate, epochs, save_dir, arch):
-    """ This function allows us to save a checkpoint for later use """
+    """
+     INPUTS:
+     model: the model we want to save
+     optimizer: the optimizer for the model we want to save
+     learning_rate (float): the learning rate for the model we want to save
+     epochs (int): the epochs for which the model was trained
+     save_dir (str): the path to the directory where the model should be saved
+     arch (str): the architecture for the model
+
+     OUTPUT:
+     None, saves the checkpoint to the desired directory
+     """
 
     checkpoint = {'input_size': model.fc.fc1.in_features,
                   'output_size': model.fc.fc2.out_features,
@@ -317,9 +346,14 @@ def save_checkpoint(model, optimizer, learning_rate, epochs, save_dir, arch):
     torch.save(checkpoint, save_dir)
 
 def load_checkpoint(checkpoint):
-    """ This function allows us to load a previously saved checkpoint 
-    It takes a checkpoint filepath and returns a trained model we can use for predictions
     """
+    INPUT:
+    checkpoint (str): the filepath to a checkpoint for a trained model
+
+    OUTPUT:
+    model: a model recreated from the checkpoint
+    """
+
     # We load our checkpoint, which contains information on the classifier which we need to build again
     checkpoint = torch.load(checkpoint, map_location='cpu')
 
