@@ -3,7 +3,8 @@
 This project exemplifies how to build an image classifier using PyTorch. The main
 files include at a development notebook, with detailed steps to pre-process images,
 train a network, save it and use it for predictions; and a Python app which can be run
-from the command line to train a neural network on any dataset of images.
+from the command line to train a neural network on any dataset of images and then
+use a trained network to make predictions.
 
 The idea is to make it easy for anyone to build their own image classifier with very 
 high accuracy. This repository has two main objectives:
@@ -13,7 +14,7 @@ it for predictions, all from the command line
 classifier to any dataset of images
 
 While the files are not clearly separated between both objectives, as a rule of thumb
-the default configuration are related to the flower dataset, while customized applications
+the default configuration are related to the flower dataset, while customized arguments
 are for personal datasets.
 
 ## Installation
@@ -45,19 +46,18 @@ units in its fully connected layer.
 
 A file with all the helper functions leveraged by the train and predict scripts:
 
-* **get_input_args_train()**: a function to parse the command line arguments passed to
+* **get_input_args_train()**: parse the command line arguments passed to
 the train script
-* **get_input_args_predict()**: a function to parse the command line arguments passed to
+* **get_input_args_predict()**: parse the command line arguments passed to
 the predict script
-* **build_model()**: a function to build a model based on a desired architecture, a number
+* **build_model()**: build a model based on a desired architecture, a number
 of hidden units and the number of categories to predict
-* **load_images()**: a function to load and transform images (both train and validation sets)
-* **validation()**: a function to do a validation pass during the training of our model
-* **train_model()**: a function to train the model, displaying some useful information
+* **load_images()**: load and transform images (both train and validation sets)
+* **validation()**: do a validation pass during the training of our model
+* **train_model()**: train the model, displaying some useful information
 during the training (such as training loss, validation loss, accuracy, which epoch)
-* **save_checkpoint()**: a function to create a checkpoint from a train model
-* **load_checkpoint()**: a function to load a checkpoint and create a trained model
-from it
+* **save_checkpoint()**: create a checkpoint from a train model
+* **load_checkpoint()**: load a checkpoint and create a trained model from it
 * **get_image()**: a function to get an image from a given filepath
 * **process_image()**: transform an image to a form suitable for analysis
 * **imshow()**: show an image
@@ -96,15 +96,15 @@ The app operates through two scripts.
 This allows to train an image classifier. Several command line arguments are available:
 *  **dir (required)**: the relative path to the folder which contains the images to train on. 
 This folder must follow a specific file structure: folder_name/train/class_nb/image_1.jpg for instance.
-It is particularly important that both a `valid` and `train` folders be present, and
+It is particularly important that both a `valid` and `train` folders are present, and
 the images corresponding to the same (numbered category) be grouped together. Mimicking
-the file structure of the provided flower folder is an easy way to structure for this
+the file structure of the provided flower folder is an easy way to structure the data for this
 task. 
 * **save_dir (optional)**: the directory where to save the checkpoint. By default it
 is the current working directory
 * **arch (optional)**: a string to choose the architecture of the classifier. This app
 leverages transfer learning, and at the moment will only work with the ResNet152 and
-VGG16 architectures. Use resnet152 or vgg16 to specify which arhictecture to work with,
+VGG16 architectures. Use resnet152 or vgg16 to specify which architecture to work with,
 it is resnet152 by default
 * **learning_rate (optional)**: a float to specify the learning rate to start with, knowing
 a scheduler is used to gradually reduce it as the network is being trained. It is 0.001 
@@ -157,7 +157,7 @@ on the local machine is more recent (a stable version `1.0.0` was released in la
 In order to avoid any problems, I recommend running these scripts in a virtual environment
 which has the appropriate version of PyTorch installed
 * the development notebook included was created and run using Google Colab with
-my personal Drive mounted on it. The file paths will need to be adapated should
+my personal Drive mounted on it. The file paths will need to be adapted should
 this notebook be re-used
 * if one is trying to use a checkpoint not created by the train script included,
 please make sure that the architecture of the model is saved as a string associated
